@@ -32,7 +32,7 @@ Project and implement in **MapReduce**, **Hive** and **Spark** the following job
 		...
 		2012: [word1_14: 200, word2_14: 180, ..., word10_14: 80]
 
-2. For each product the list of average scores gained from 2003 and 2012, specifing the *ProductId* followed by all the average scored obtained during the years considered. The output should be ordered by ProductId. Example:  
+2. For each product, list the average scores gained from 2003 and 2012, specifing the *ProductId* followed by all the average scored obtained during the years considered. The output should be ordered by ProductId. Example:  
 
 		Prod_0: [2003: 4.2, 2004: 4.4, ..., 2012: 4.8]
 		Prod_1: [2003: 3.1, 2004: 3.0, ..., 2012: 3.6]
