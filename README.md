@@ -25,7 +25,7 @@ The dataset **Amazon Fine Food Reviews** ([Reviews.cvs.zip](http://torlone.dia.u
 ### Goal
 
 Project and implement in **MapReduce**, **Hive** and **Spark** the following jobs:
-1. For each year, list the ten most used words in the field *Summary* of all reviews, ordered by frequency, specifing the number of occurences of each word. Example:  
+1. For each year, list the ten most used words in the field *Summary* of all reviews, ordered by frequency, specifing the number of occurrences of each word. Example:  
 
 		1999: [word1_1: 230, word2_1: 207, ..., word10_1: 70]
 		2000: [word1_2: 130, word2_2: 111, ..., word10_2: 34]
