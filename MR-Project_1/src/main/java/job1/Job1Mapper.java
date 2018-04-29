@@ -1,5 +1,8 @@
 package job1;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -16,16 +19,18 @@ import java.util.List;
 
 public class Job1Mapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 	
+	private BufferedWriter writer = null;
+	private File logFile = new File("/home/armandocin/Scrivania/log.txt");
 	private static final Log LOG = LogFactory.getLog(Job1Mapper.class);
 	private static List<String> FILTERED = new ArrayList<>(Arrays
 			.asList("is", "are", "this", "these", "that", "but", "the", "and", "a", "to", "in", "an", "for", "by", "of", "from", "with", "on", "i", "not", "it", "my"));
 	
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-
+		
 		try {
 			/*parsing csv records. Form: Id, ProductID, UserID, Profile Name, HelpNum, HelpDen, Score, Time, Summary, Text.*/
 			String csv_record = value.toString();
-			String[] csv_fields = csv_record.split(",(?! )");
+			String[] csv_fields = csv_record.split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*(?![^\\\"]*\\\"))");
 			Long timestamp = Long.parseLong(csv_fields[7]);
 			String summary = csv_fields[8];
 			summary = summary.toLowerCase();
@@ -34,6 +39,17 @@ public class Job1Mapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 			Calendar cal = Calendar.getInstance();
 			cal.setTimeInMillis(timestamp*1000L);
 			int year = cal.get(Calendar.YEAR);
+			
+			if(year==1970) {
+				String out = "";
+				writer = new BufferedWriter(new FileWriter(logFile, true));
+				for (String field : csv_fields) {
+					out += field + " - ";
+				}		
+	            writer.write(out);
+	            writer.newLine();
+	            writer.close();
+			}
 			
 			/*writing the pair (year, word) for each word in the summary*/
 			String[] tokenized_summary = summary.split("\\s+");
@@ -45,9 +61,11 @@ public class Job1Mapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 		}
 		catch (NumberFormatException e) {
 			//System.out.println(value.toString());
-			LOG.info(value.toString());
+			LOG.info("\n" + value.toString() + "\n");
 		}
 		
 	}
+	
+	
 	
 }
