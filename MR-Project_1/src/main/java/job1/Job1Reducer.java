@@ -27,20 +27,11 @@ public class Job1Reducer extends Reducer<IntWritable, Text, IntWritable, Text> {
 			}
 		}
 		Map<String, Long> sorted = count.entrySet().stream()
-				.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+				.sorted(Entry.comparingByValue(Comparator.reverseOrder()))
+				.limit(10)
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
 		
-		if(sorted.size()>10) {
-			Map<String, Long> short_map = new LinkedHashMap<>();
-			Iterator<String> it = sorted.keySet().iterator();
-			for (int i=0; i<10; i++) {
-				String sorted_key = it.next();
-				short_map.put(sorted_key, sorted.get(sorted_key));
-			}
-			context.write(key, new Text(short_map.toString()));
-		}
-		else
-			context.write(key, new Text(sorted.toString()));
+		context.write(key, new Text(sorted.entrySet().toString()));
 		/*
 		String output_list = "[";
 		for (String keyword : count.keySet()) {
