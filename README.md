@@ -27,24 +27,24 @@ The dataset **Amazon Fine Food Reviews** ([Reviews.cvs.zip](http://torlone.dia.u
 Project and implement in **MapReduce**, **Hive** and **Spark** the following jobs:
 1. For each year, list the ten most used words in the field *Summary* of all reviews, ordered by frequency, specifing the number of occurrences of each word. Example:  
 
-		1999: [word1_1: 230, word2_1: 207, ..., word10_1: 70]
-		2000: [word1_2: 130, word2_2: 111, ..., word10_2: 34]
+		1999	[word1_1=230, word2_1=207, ..., word10_1=70]
+		2000	[word1_2=130, word2_2=111, ..., word10_2=34]
 		...
-		2012: [word1_14: 200, word2_14: 180, ..., word10_14: 80]
+		2012	[word1_14=200, word2_14=180, ..., word10_14=80]
 
 2. For each product, list the average scores gained from 2003 and 2012, specifing the *ProductId* followed by all the average scored obtained during the years considered. The output should be ordered by ProductId. Example:  
 
-		Prod_0: [2003: 4.2, 2004: 4.4, ..., 2012: 4.8]
-		Prod_1: [2003: 3.1, 2004: 3.0, ..., 2012: 3.6]
+		Prod_0	[2003=4.2, 2004=4.4, ..., 2012=4.8]
+		Prod_1	[2003=3.1, 2004=3.0, ..., 2012=3.6]
 		...
 
 3. Pair of products having at least one user in common, that is, products that have been reviewed by the same user. For each pair must be specified the number of common users. The result should be ordered by the *ProductId* of the first element forming the pair, and possibly should not have duplicates. Example:  
 
-		(Prod_0, Prod_1): 3
-		(Prod_0, Prod_3): 1
+		(Prod_0, Prod_1)	3
+		(Prod_0, Prod_3)	1
 		...
 		(Prod_1, Prod_0) ---> duplicate
-		(Prod_1, Prod_2): 4
+		(Prod_1, Prod_2)	4
 		...
 
 ### Report
