@@ -23,10 +23,10 @@ public class Job1Mapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 	private File logFile = new File("/home/armandocin/Scrivania/log.txt");
 	private static final Log LOG = LogFactory.getLog(Job1Mapper.class);
 	private static List<String> FILTERED = new ArrayList<>(Arrays
-			.asList("is", "are", "this", "these", "that", "but", "the", "and", "a", "to", "in", "an", "for", "by", "of", "from", "with", "on", "i", "not", "it", "my"));
+			.asList("", "is", "are", "this", "these", "that", "but", "the", "and", "a", "to", "in", "an", "for", "by", "of", "from", "with", "on", "i", "not", "it", "my"));
 	
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-		
+		Boolean empty = false;
 		try {
 			/*parsing csv records. Form: Id, ProductID, UserID, Profile Name, HelpNum, HelpDen, Score, Time, Summary, Text.*/
 			String csv_record = value.toString();
@@ -40,23 +40,24 @@ public class Job1Mapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 			cal.setTimeInMillis(timestamp*1000L);
 			int year = cal.get(Calendar.YEAR);
 			
-			if(year==1970) {
-				String out = "";
-				writer = new BufferedWriter(new FileWriter(logFile, true));
-				for (String field : csv_fields) {
-					out += field + " - ";
-				}		
-	            writer.write(out);
-	            writer.newLine();
-	            writer.close();
-			}
-			
 			/*writing the pair (year, word) for each word in the summary*/
 			String[] tokenized_summary = summary.split("\\s+");
 			for(String word : tokenized_summary) {
 				word = word.replaceAll("[\\-\\+\\.\\^:,\"\'$%&(){}£=#@!?\t\n]","");
 				if( !FILTERED.contains(word) )
+					if(word.equals("")) empty=true;
 					context.write(new IntWritable(year), new Text(word));
+			}
+			
+			if(empty){
+				String out = "";
+				writer = new BufferedWriter(new FileWriter(logFile, true));
+				for (String field : csv_fields) {
+					out += field + " | ";
+				}		
+	            writer.write(out);
+	            writer.newLine();
+	            writer.close();
 			}
 		}
 		catch (NumberFormatException e) {
