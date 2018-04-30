@@ -16,7 +16,7 @@ public class Job1Reducer extends Reducer<IntWritable, Text, IntWritable, Text> {
 	
 	@Override
 	public void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-		Map<String, Long> count = new LinkedHashMap<String, Long>();
+		Map<String, Long> count = new LinkedHashMap<>();
 		
 		for(Text word : values) {
 			if (!count.containsKey(word.toString()))
