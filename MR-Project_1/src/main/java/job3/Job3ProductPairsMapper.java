@@ -10,7 +10,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import job1.Job1Mapper;
 
-public class Job3Mapper	extends Mapper<LongWritable, Text, Text, Text> {
+public class Job3ProductPairsMapper	extends Mapper<LongWritable, Text, Text, Text> {
 	
 	private static final Log LOG = LogFactory.getLog(Job1Mapper.class);
 	

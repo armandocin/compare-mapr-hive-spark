@@ -10,10 +10,9 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 
-public class Job3_2 extends Configured implements Tool {
-	private Job3_2() {
+public class Job3UsersCountConfig extends Configured implements Tool {
+	public Job3UsersCountConfig() {
     }
 	
 	@Override
@@ -23,9 +22,9 @@ public class Job3_2 extends Configured implements Tool {
         
         Job job3_2 = Job.getInstance(conf2);  
 	    job3_2.setJobName("count users");
-        job3_2.setJarByClass(Job3_2.class);
+        job3_2.setJarByClass(Job3UsersCountConfig.class);
         
-        job3_2.setMapperClass(Job3IdentityMapper.class);
+        job3_2.setMapperClass(Job3UsersCountMapper.class);
         job3_2.setReducerClass(Job3UsersCountReducer.class);
         job3_2.setMapOutputKeyClass(Text.class);
         job3_2.setMapOutputValueClass(Text.class);
@@ -33,7 +32,7 @@ public class Job3_2 extends Configured implements Tool {
         job3_2.setOutputKeyClass(Text.class);
         job3_2.setOutputValueClass(LongWritable.class);
         job3_2.setInputFormatClass(KeyValueTextInputFormat.class);
-        FileInputFormat.addInputPath(job3_2, new Path(args[0]));
+        FileInputFormat.addInputPath(job3_2, new Path(args[1] + "/temp"));
         FileOutputFormat.setOutputPath(job3_2, new Path(args[1] + "/final"));
         
         long startTime = System.currentTimeMillis();
@@ -44,12 +43,6 @@ public class Job3_2 extends Configured implements Tool {
         
         return status;
         
-	}
-
-	public static void main(String[] args) throws Exception {
-		int ext = ToolRunner.run(new Job3_2(), args);
-		System.exit(ext);
-
 	}
 
 }
