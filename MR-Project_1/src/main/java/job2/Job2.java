@@ -25,7 +25,15 @@ public class Job2 {
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
         
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+        long startTime = System.currentTimeMillis();
+        
+        int status = job.waitForCompletion(true) ? 0 : 1;
+
+        System.out.println("Job Finished in "
+                + (System.currentTimeMillis() - startTime) / 1000.0
+                + " seconds");
+        
+        System.exit(status);
 
 	}
 

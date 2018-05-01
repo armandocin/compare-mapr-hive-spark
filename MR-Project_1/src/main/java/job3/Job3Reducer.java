@@ -17,7 +17,7 @@ public class Job3Reducer extends Reducer<Text, Text, Text, Text> {
 		for(String prev : values_list) {
 			Iterator<String> it1 = values_list.listIterator(values_list.indexOf(prev)+1);
 			it1.forEachRemaining(curr -> {
-				String pair = prev+","+ curr;
+				String pair = "("+ prev +","+ curr +")";
 				try {
 					context.write(new Text(pair), key);
 				} catch (IOException | InterruptedException e1) {
