@@ -35,6 +35,7 @@ public class Job2Reducer extends Reducer<Text, Text, Text, Text> {
 			Long len = scoresCollection.get(y).stream().count();
 			Double sum = scoresCollection.get(y).stream().mapToDouble(Double::doubleValue).sum();
 			Double avg = (double) (sum/len);
+			avg = Math.round(avg*100.0)/100.0; //rounding to 2 decimal points
 			avgMap.put(y, avg);
 		}
 		
