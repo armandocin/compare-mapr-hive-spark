@@ -1,8 +1,5 @@
 package job1;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -18,15 +15,13 @@ import java.util.Calendar;
 import java.util.List;
 
 public class Job1Mapper extends Mapper<LongWritable, Text, IntWritable, Text> {
-	
-	private BufferedWriter writer = null;
-	private File logFile = new File("/home/armandocin/Scrivania/log.txt");
+
 	private static final Log LOG = LogFactory.getLog(Job1Mapper.class);
 	private static List<String> FILTERED = new ArrayList<>(Arrays
 			.asList("", "is", "are", "this", "these", "that", "but", "the", "and", "a", "to", "in", "an", "for", "by", "of", "from", "with", "on", "i", "not", "it", "my"));
 	
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-		Boolean empty = false;
+
 		try {
 			/*parsing csv records. Form: Id, ProductID, UserID, Profile Name, HelpNum, HelpDen, Score, Time, Summary, Text.*/
 			String csv_record = value.toString();
@@ -45,19 +40,7 @@ public class Job1Mapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 			for(String word : tokenized_summary) {
 				word = word.replaceAll("[\\-\\+\\.\\^:,\"\'$%&(){}£=#@!?\t\n]","");
 				if( !FILTERED.contains(word) )
-					if(word.equals("")) empty=true;
 					context.write(new IntWritable(year), new Text(word));
-			}
-			
-			if(empty){
-				String out = "";
-				writer = new BufferedWriter(new FileWriter(logFile, true));
-				for (String field : csv_fields) {
-					out += field + " | ";
-				}		
-	            writer.write(out);
-	            writer.newLine();
-	            writer.close();
 			}
 		}
 		catch (NumberFormatException e) {

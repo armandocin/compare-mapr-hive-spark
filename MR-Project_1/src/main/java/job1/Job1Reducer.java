@@ -16,17 +16,17 @@ public class Job1Reducer extends Reducer<IntWritable, Text, IntWritable, Text> {
 	
 	@Override
 	public void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-		Map<String, Long> count = new LinkedHashMap<>();
+		Map<String, Long> countWordsMap = new LinkedHashMap<>();
 		
 		for(Text word : values) {
-			if (!count.containsKey(word.toString()))
-				count.put(word.toString(), one);
+			if (!countWordsMap.containsKey(word.toString()))
+				countWordsMap.put(word.toString(), one);
 			else {
-				long occ = count.get(word.toString());
-				count.put(word.toString(), occ+1);
+				long occ = countWordsMap.get(word.toString());
+				countWordsMap.put(word.toString(), occ+1);
 			}
 		}
-		Map<String, Long> sorted = count.entrySet().stream()
+		Map<String, Long> sorted = countWordsMap.entrySet().stream()
 				.sorted(Entry.comparingByValue(Comparator.reverseOrder()))
 				.limit(10)
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));

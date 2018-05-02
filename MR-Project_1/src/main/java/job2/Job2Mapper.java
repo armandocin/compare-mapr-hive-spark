@@ -12,11 +12,9 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import job1.Job1Mapper;
-
 public class Job2Mapper extends Mapper<LongWritable, Text, Text, Text> {
 	
-	private static final Log LOG = LogFactory.getLog(Job1Mapper.class);
+	private static final Log LOG = LogFactory.getLog(Job2Mapper.class);
 	private static List<Integer> FILTERED = new ArrayList<>(Arrays
 			.asList(1999, 2000, 2001, 2002));
 	
@@ -36,9 +34,9 @@ public class Job2Mapper extends Mapper<LongWritable, Text, Text, Text> {
 			cal.setTimeInMillis(timestamp*1000L);
 			int year = cal.get(Calendar.YEAR);
 			
-			String output_key = Integer.toString(year) + "-" + score;
+			String output_value = Integer.toString(year) + "-" + score;
 			if(!FILTERED.contains(year))
-				context.write(new Text(product), new Text(output_key));
+				context.write(new Text(product), new Text(output_value));
 		}
 		catch (NumberFormatException e) {
 			//System.out.println(value.toString());
