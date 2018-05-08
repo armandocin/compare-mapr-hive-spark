@@ -3,7 +3,7 @@ drop table if exists reviews;
 drop table if exists mapper;
 drop table if exists reducer;
 
-add jar /home/armandocin/Documenti/eclipse-workspace/hiveUDF/target/hiveUDF-0.0.1-SNAPSHOT.jar;
+add jar /home/armandocin/Documenti/bigdata_git/lib/hiveUDF-0.0.1-SNAPSHOT.jar;
 CREATE TEMPORARY FUNCTION limit_list AS 'utils.LimitCollectionLengthUDF';
 
 --row format delimited fields terminated by ${pattern};
