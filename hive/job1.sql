@@ -3,7 +3,11 @@ drop table if exists reviews;
 drop table if exists mapper;
 drop table if exists reducer;
 
-CREATE TABLE input (line STRING) ;
+add jar /home/armandocin/Documenti/eclipse-workspace/hiveUDF/target/hiveUDF-0.0.1-SNAPSHOT.jar;
+CREATE TEMPORARY FUNCTION limit_list AS 'utils.LimitCollectionLengthUDF';
+
+--row format delimited fields terminated by ${pattern};
+CREATE TABLE input (line STRING); 
 
 LOAD DATA LOCAL INPATH '/home/armandocin/hadoop-docker-volume/data/Reviews_ridotto.csv' OVERWRITE INTO TABLE input;
 
@@ -39,7 +43,7 @@ FROM
 WHERE t2.Word != "";
 
 CREATE TABLE reducer AS
-SELECT Year, collect_set(keyvalue) as WordsCount
+SELECT Year, limit_list(collect_set(keyvalue)) as WordsCount
 FROM mapper
 GROUP BY Year
 ORDER BY Year;
