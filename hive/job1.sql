@@ -1,9 +1,8 @@
 drop table if exists input;
 drop table if exists reviews;
-drop table if exists mapper;
-drop table if exists reducer;
+drop table if exists yearwordcount;
 
-add jar /home/armandocin/Documenti/bigdata_git/lib/hiveUDF-0.0.1-SNAPSHOT.jar;
+add jar /home/armandocin/Documenti/bigdata_git/hive/lib/hiveUDF-0.0.1-SNAPSHOT.jar;
 CREATE TEMPORARY FUNCTION limit_list AS 'utils.LimitCollectionLengthUDF';
 
 --row format delimited fields terminated by ${pattern};
@@ -26,24 +25,20 @@ SELECT split(line, ${pattern})[0] as Id,
 	split(line, ${pattern})[9] as Text
 FROM input;
 
-CREATE TABLE mapper AS
-SELECT t2.Year, concat(t2.Word, "=", cast(t2.Count as string)) as keyvalue
+CREATE TABLE yearwordcount AS
+SELECT t2.Year, limit_list(collect_set(concat(t2.Word, "=", cast(t2.Count as string)))) as keyvalue
 FROM
 	(
-	SELECT Year, Word, COUNT(1) as Count
+	SELECT t1.Year, t1.Word, COUNT(1) as Count
 	FROM(
 		SELECT year(from_unixtime(Time)) as Year, lower(regexp_replace(Word, '[\\-\\+\\.\\^:,\"\'$%&(){}£=#@!?\t\n]', '')) as Word
 		FROM reviews
 		LATERAL VIEW explode( split(Summary, "\\s+") ) exp AS Word
 		) t1
 	WHERE t1.Year is not NULL
-	GROUP BY Year, Word
-	ORDER BY Year ASC, Count DESC
+	GROUP BY t1.Year, t1.Word
+	ORDER BY t1.Year ASC, Count DESC
 	) t2
-WHERE t2.Word != "";
+WHERE t2.Word != ""
+GROUP BY t2.Year;
 
-CREATE TABLE reducer AS
-SELECT Year, limit_list(collect_set(keyvalue)) as WordsCount
-FROM mapper
-GROUP BY Year
-ORDER BY Year;
