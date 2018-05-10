@@ -25,8 +25,8 @@ SELECT split(line, ${pattern})[0] as Id,
 	split(line, ${pattern})[9] as Text
 FROM input;
 
-CREATE TABLE yearwordcount AS
-SELECT t2.Year, limit_list(collect_set(concat(t2.Word, "=", cast(t2.Count as string)))) as keyvalue
+CREATE TABLE year_wordcount AS
+SELECT t2.Year, limit_list(collect_set(concat(t2.Word, "=", cast(t2.Count as string)))) as WordCounts
 FROM
 	(
 	SELECT t1.Year, t1.Word, COUNT(1) as Count
