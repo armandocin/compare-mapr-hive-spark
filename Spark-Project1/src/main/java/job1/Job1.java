@@ -1,5 +1,6 @@
 package job1;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
@@ -12,45 +13,39 @@ import org.apache.spark.api.java.JavaSparkContext;
 
 import scala.Tuple2;
 
-public class Job1 {
+public class Job1 implements Serializable{
 	
+	private static final long serialVersionUID = 1L;
 	private static String pathToFile;
-	private static String pathToOutput;
-	private JavaSparkContext sc;
 	private static final String PATTERN = ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*(?![^\\\"]*\\\"))";
 	private static final String REPLACE = "[\\-\\+\\.\\^:,\"\'$%&(){}£=#@!?\t\n]";
 	
-	public Job1(String fileInput, String fileOutput){
+	public Job1(String fileInput){
 		Job1.pathToFile = fileInput;
-		Job1.pathToOutput = fileOutput;
 	}
 	
-	public JavaSparkContext getContext() {
-		return sc;
-	}
-
-	public JavaRDD<List<String>> setup(){
-		SparkConf sparkConf = new SparkConf().setAppName("Job1");
-		sc = new JavaSparkContext(sparkConf);
-		JavaRDD<List<String>> input = sc.textFile(pathToFile)
-				.map(review -> Arrays.asList(review.split(PATTERN)));
-		
+	public JavaRDD<LinkedList<String>> setup(JavaSparkContext sc) {
+		JavaRDD<LinkedList<String>> input = sc.textFile(pathToFile)
+				.map(review -> new LinkedList<>(Arrays.asList(review.split(PATTERN))));
 		return input;
 	}
 	
-	public JavaPairRDD<Integer, Map<String, Long>> mapper(){
+	public JavaPairRDD<Integer, Map<String, Long>> run(JavaSparkContext sc){
+		
+		JavaRDD<LinkedList<String>> reviews = setup(sc);
 		/**
 		 * Parsing lines returning an rdd pairs containing (year, list_of_words)
 		 */
-		JavaRDD<List<String>> reviews = setup();
-		JavaPairRDD<Integer, List<String>> wordsPerYear = reviews
+		JavaPairRDD<Integer, LinkedList<String>> wordsPerYear = reviews
 				.mapToPair(line -> {
 					String timestamp = line.get(7);
 					String summary = line.get(8);
-					List<String> tokenized_summary = Arrays.asList(summary.split("\\s+"));
+					LinkedList<String> tokenized_summary = new LinkedList<>(Arrays.asList(summary.split("\\s+")));
 					return new Tuple2<>(getYear(timestamp), tokenized_summary);
 				})
-				.reduceByKey((l1, l2)-> {l1.addAll(l2); return l1;});
+				.reduceByKey((l1, l2)-> {l1.addAll(l2); return l1;})
+				.filter(tuple -> tuple._1 != -1)
+				.sortByKey(true);
 		
 		/**
 		 * Counting, sorting, limit the words list
@@ -67,11 +62,10 @@ public class Job1 {
 		return wordCountPerYear;
 	}
 	
-	
-	
 	public Map<String, Long> wordcount(List<String> words){
 		Map<String, Long> counts = words.stream()
 			    .map(word -> word.replaceAll(REPLACE, "").toLowerCase().trim())
+			    .filter(word -> word.length() > 0)
 			    .map(word -> new SimpleEntry<>(word, 1))
 		        .collect(Collectors.groupingBy( SimpleEntry::getKey, Collectors.counting() ));
 		
@@ -79,18 +73,30 @@ public class Job1 {
 	}
 	
 	public Integer getYear(String timestamp) {
-		Long unix_time = Long.parseLong(timestamp);
-		Calendar cal = Calendar.getInstance();
-		cal.setTimeInMillis(unix_time*1000L);
-		int year = cal.get(Calendar.YEAR);
-		
-		return year;
+		try {
+			Long unix_time = Long.parseLong(timestamp);
+			Calendar cal = Calendar.getInstance();
+			cal.setTimeInMillis(unix_time*1000L);
+			int year = cal.get(Calendar.YEAR);
+			
+			return year;
+		}catch (NumberFormatException e) {
+			return -1;
+		}
 	}
 	
 	public static void main(String[] args) {
-		Job1 job = new Job1(args[0], args[1]);
+		if (args.length < 2) {
+			System.err.println("Usage: Job1 <filetxt_input> <filetxt_output>");
+			System.exit(1);
+		}
+		SparkConf sparkConf = new SparkConf().setAppName("Job1");
+		JavaSparkContext sc = new JavaSparkContext(sparkConf);
 		
-		job.getContext().close();
+		Job1 job = new Job1(args[0]);
+		job.run(sc).coalesce(1).saveAsTextFile(args[1]);
+		
+		sc.close();
 
 	}
 
