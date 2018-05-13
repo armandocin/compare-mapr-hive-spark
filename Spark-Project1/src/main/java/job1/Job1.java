@@ -28,7 +28,7 @@ public class Job1 implements Serializable{
 		JavaRDD<String> dataWithHeader = sc.textFile(pathToFile);
 		String header = dataWithHeader.first();
 		JavaRDD<LinkedList<String>> input = dataWithHeader
-				.filter(l -> l!=header)
+				.filter(l -> !l.equals(header))
 				.map(review -> new LinkedList<>(Arrays.asList(review.split(PATTERN))));
 		return input;
 	}
@@ -58,7 +58,7 @@ public class Job1 implements Serializable{
 			Map<String, Long> wordcount = wordcount(tuple._2).entrySet().stream()
 					.sorted(Entry.comparingByValue(Comparator.reverseOrder()))
 					.limit(10)
-					.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));;
+					.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
 			return new Tuple2<>(tuple._1, wordcount);
 		});
 		
