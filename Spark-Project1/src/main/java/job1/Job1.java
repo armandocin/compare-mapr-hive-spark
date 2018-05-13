@@ -25,7 +25,10 @@ public class Job1 implements Serializable{
 	}
 	
 	public JavaRDD<LinkedList<String>> setup(JavaSparkContext sc) {
-		JavaRDD<LinkedList<String>> input = sc.textFile(pathToFile)
+		JavaRDD<String> dataWithHeader = sc.textFile(pathToFile);
+		String header = dataWithHeader.first();
+		JavaRDD<LinkedList<String>> input = dataWithHeader
+				.filter(l -> l!=header)
 				.map(review -> new LinkedList<>(Arrays.asList(review.split(PATTERN))));
 		return input;
 	}
