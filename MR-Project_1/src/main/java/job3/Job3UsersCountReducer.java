@@ -12,13 +12,13 @@ public class Job3UsersCountReducer extends Reducer<Text, Text, Text, LongWritabl
 	@Override
 	public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 		
-		Set<Text> no_duplicati = new HashSet<>();
+		Set<Text> no_duplicates = new HashSet<>();
 		int count = 0;
 		Iterator<Text> it = values.iterator();
 		while(it.hasNext()) {
-			no_duplicati.add(it.next());
+			no_duplicates.add(it.next());
 		}
-		count = no_duplicati.size();
+		count = no_duplicates.size();
 		
 		context.write(key, new LongWritable(count));
 		

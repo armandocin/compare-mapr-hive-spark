@@ -1,13 +1,12 @@
 package job3;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.LinkedList;
-
+import java.util.*;
+import job3.TupleComparator;
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-
 import scala.Tuple2;
 
 public class Job3 implements Serializable {
@@ -43,10 +42,29 @@ public class Job3 implements Serializable {
 		
 		JavaPairRDD<Tuple2<String, String>, Long> commonUsersRDD = prodUserPairRDD
 				.join(prodUserPairRDD)
-				.mapToPair(tuple -> new Tuple2<>( tuple._2, tuple._1 ))
-				.aggregateByKey(0L, (a, b) -> a+1L, (p1, p2) -> p1+p2);
-		
+				.filter(tuple -> tuple._2._1.compareTo(tuple._2._2)<0) //take only pairs where products are different and the first precedes the latter
+				.mapToPair(tuple -> new Tuple2<>( tuple._2, 1L ))
+				//.aggregateByKey(0L, (a, b) -> a+1L, (p1, p2) -> p1+p2);
+				.reduceByKey((a,b) -> a+b)
+				.sortByKey(new TupleComparator())
+				;
+				
 		return commonUsersRDD;
+
+	}
+	
+	public static void main(String[] args) {
+		if (args.length < 2) {
+			System.err.println("Usage: Job1 <filetxt_input> <filetxt_output>");
+			System.exit(1);
+		}
+		SparkConf sparkConf = new SparkConf().setAppName("Job3");
+		JavaSparkContext sc = new JavaSparkContext(sparkConf);
+		
+		Job3 job = new Job3(args[0]);
+		job.run(sc).coalesce(1).saveAsTextFile(args[1]);
+		
+		sc.close();
 
 	}
 
