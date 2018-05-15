@@ -18,7 +18,8 @@ public class Job1Mapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 
 	private static final Log LOG = LogFactory.getLog(Job1Mapper.class);
 	private static List<String> FILTERED = new ArrayList<>(Arrays
-			.asList("", "is", "are", "this", "these", "that", "but", "the", "and", "a", "to", "in", "an", "for", "by", "of", "from", "with", "on", "i", "not", "it", "my"));
+			.asList("")//, "is", "are", "this", "these", "that", "but", "the", "and", "a", "to", "in", "an", "for", "by", "of", "from", "with", "on", "i", "not", "it", "my")
+			);
 	
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 

@@ -1,6 +1,6 @@
 drop table if exists input;
 drop table if exists reviews;
-drop table if exists avg_scores_per_year;
+drop table if exists result;
 
 --row format delimited fields terminated by ${pattern};
 CREATE TABLE input (line STRING); 
@@ -22,7 +22,7 @@ SELECT split(line, ${pattern})[0] as Id,
 	split(line, ${pattern})[9] as Text
 FROM input;
 
-CREATE TABLE avg_scores_per_year AS
+CREATE TABLE result AS
 SELECT ProductId, collect_set(concat(reducer.Year, "=", cast(reducer.AvgScore as string))) as AvgPerYear
 FROM(
 	SELECT ProductId, Year, round(AVG(Score), 2) as AvgScore
@@ -35,3 +35,11 @@ FROM(
 	ORDER BY ProductId, Year
 	) reducer
 GROUP BY ProductId;
+
+create external table output (Year int, WordCounts array<string>)
+row format delimited
+fields terminated by '\t'
+collection items terminated by ', '
+lines terminated by '\n'
+stored as textfile location '/user/hive/warehouse/output';
+insert into table output select * from result;

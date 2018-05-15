@@ -1,6 +1,7 @@
 drop table if exists input;
 drop table if exists reviews;
-drop table if exists yearwordcount;
+drop table if exists result;
+drop table if exists output;
 
 add jar /home/armandocin/Documenti/bigdata_git/hive/lib/hiveUDF-0.0.1-SNAPSHOT.jar;
 CREATE TEMPORARY FUNCTION limit_list AS 'utils.LimitCollectionLengthUDF';
@@ -8,7 +9,7 @@ CREATE TEMPORARY FUNCTION limit_list AS 'utils.LimitCollectionLengthUDF';
 --row format delimited fields terminated by ${pattern};
 CREATE TABLE input (line STRING); 
 
-LOAD DATA LOCAL INPATH '/home/armandocin/hadoop-docker-volume/data/Reviews_ridotto.csv' OVERWRITE INTO TABLE input;
+LOAD DATA INPATH '/user/hive/input_proj1/Reviews_multi' OVERWRITE INTO TABLE input;
 
 set hivevar:pattern = ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*(?![^\\\"]*\\\"))";
 
@@ -25,7 +26,7 @@ SELECT split(line, ${pattern})[0] as Id,
 	split(line, ${pattern})[9] as Text
 FROM input;
 
-CREATE TABLE year_wordcount AS
+CREATE TABLE result AS
 SELECT t2.Year, limit_list(collect_set(concat(t2.Word, "=", cast(t2.Count as string)))) as WordCounts
 FROM
 	(
@@ -42,3 +43,10 @@ FROM
 WHERE t2.Word != ""
 GROUP BY t2.Year;
 
+create external table output (Year int, WordCounts array<string>)
+row format delimited
+fields terminated by '\t'
+collection items terminated by ',\s'
+lines terminated by '\n'
+stored as textfile location '/user/hive/warehouse/output';
+insert into table output select * from result;

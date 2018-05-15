@@ -1,6 +1,6 @@
 drop table if exists input;
 drop table if exists reviews;
-drop table if exists common_users_per_prod_pair;
+drop table if exists result;
 
 --row format delimited fields terminated by ${pattern};
 CREATE TABLE input (line STRING); 
@@ -22,7 +22,7 @@ SELECT split(line, ${pattern})[0] as Id,
 	split(line, ${pattern})[9] as Text
 FROM input;
 
-CREATE TABLE common_users_per_prod_pair AS
+CREATE TABLE result AS
 SELECT t1.ProductId as Product1, t2.ProductId as Product2, COUNT(1) as CommonUsersNum
 FROM(
 	SELECT DISTINCT ProductId, UserId
@@ -40,3 +40,11 @@ WHERE t1.ProductId < t2.ProductId --do not select duplicate pairs
 GROUP BY t1.ProductId, t2.ProductId
 HAVING t1.ProductId != t2.ProductId
 ORDER BY t1.ProductId, t2.ProductId
+
+create external table output (Year int, WordCounts array<string>)
+row format delimited
+fields terminated by '\t'
+collection items terminated by ', '
+lines terminated by '\n'
+stored as textfile location '/user/hive/warehouse/output';
+insert into table output select * from result;

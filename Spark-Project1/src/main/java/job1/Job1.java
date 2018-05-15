@@ -54,12 +54,12 @@ public class Job1 implements Serializable{
 		 * Counting, sorting, limit the words list
 		 * Map containing (word, count) is used
 		 */
-		JavaPairRDD<Integer, Map<String, Long>> wordCountPerYear = wordsPerYear.mapToPair(tuple ->{
-			Map<String, Long> wordcount = wordcount(tuple._2).entrySet().stream()
+		JavaPairRDD<Integer, Map<String, Long>> wordCountPerYear = wordsPerYear.mapValues(words ->{
+			Map<String, Long> wordcount = wordcount(words).entrySet().stream()
 					.sorted(Entry.comparingByValue(Comparator.reverseOrder()))
 					.limit(10)
 					.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
-			return new Tuple2<>(tuple._1, wordcount);
+			return wordcount;
 		});
 		
 		return wordCountPerYear;
