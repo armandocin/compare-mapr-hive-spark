@@ -39,11 +39,11 @@ public class Job1 implements Serializable{
 		/**
 		 * Parsing lines returning an rdd pairs containing (year, list_of_words)
 		 */
-		JavaPairRDD<Integer, LinkedList<String>> wordsPerYear = reviews
+		JavaPairRDD<Integer, List<String>> wordsPerYear = reviews
 				.mapToPair(line -> {
 					String timestamp = line.get(7);
 					String summary = line.get(8);
-					LinkedList<String> tokenized_summary = new LinkedList<>(Arrays.asList(summary.split("\\s+")));
+					List<String> tokenized_summary = new ArrayList<>(Arrays.asList(summary.split("\\s+")));
 					return new Tuple2<>(getYear(timestamp), tokenized_summary);
 				})
 				.reduceByKey((l1, l2)-> {l1.addAll(l2); return l1;})
@@ -75,9 +75,9 @@ public class Job1 implements Serializable{
 		return counts;
 	}
 	
-	public Integer getYear(String timestamp) {
+	public int getYear(String timestamp) {
 		try {
-			Long unix_time = Long.parseLong(timestamp);
+			long unix_time = Long.parseLong(timestamp);
 			Calendar cal = Calendar.getInstance();
 			cal.setTimeInMillis(unix_time*1000L);
 			int year = cal.get(Calendar.YEAR);
@@ -93,7 +93,10 @@ public class Job1 implements Serializable{
 			System.err.println("Usage: Job1 <filetxt_input> <filetxt_output>");
 			System.exit(1);
 		}
-		SparkConf sparkConf = new SparkConf().setAppName("Job1");
+		SparkConf sparkConf = new SparkConf().setAppName("Job1")
+				.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+				.set("spark.kryoserializer.buffer.mb","48")
+				;
 		JavaSparkContext sc = new JavaSparkContext(sparkConf);
 		
 		Job1 job = new Job1(args[0]);

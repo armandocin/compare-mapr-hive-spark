@@ -1,11 +1,12 @@
 drop table if exists input;
 drop table if exists reviews;
 drop table if exists result;
+drop table if exists output;
 
 --row format delimited fields terminated by ${pattern};
 CREATE TABLE input (line STRING); 
 
-LOAD DATA LOCAL INPATH '/home/armandocin/hadoop-docker-volume/data/Reviews_ridotto50k.csv' OVERWRITE INTO TABLE input;
+LOAD DATA LOCAL INPATH '/home/armandocin/hadoop-docker-volume/data/input_proj1/Reviews.csv' OVERWRITE INTO TABLE input;
 
 set hivevar:pattern = ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*(?![^\\\"]*\\\"))";
 
@@ -41,7 +42,7 @@ GROUP BY t1.ProductId, t2.ProductId
 HAVING t1.ProductId != t2.ProductId
 ORDER BY t1.ProductId, t2.ProductId
 
-create external table output (Year int, WordCounts array<string>)
+create external table output (p1 string, p2 string, cnt bigint)
 row format delimited
 fields terminated by '\t'
 collection items terminated by ', '

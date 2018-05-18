@@ -2,21 +2,23 @@ package job3;
 
 import java.io.Serializable;
 import java.util.*;
-import job3.TupleComparator;
+import java.util.stream.Collectors;
+
+//import job3.TupleComparator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
 
-public class Job3 implements Serializable {
+public class Job3NoJoin implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private static String pathToFile;
 	private static final String PATTERN = ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*(?![^\\\"]*\\\"))";
 	
-	public Job3(String fileInput){
-		Job3.pathToFile = fileInput;
+	public Job3NoJoin(String fileInput){
+		Job3NoJoin.pathToFile = fileInput;
 	}
 	
 	public JavaRDD<LinkedList<String>> setup(JavaSparkContext sc) {
@@ -28,26 +30,44 @@ public class Job3 implements Serializable {
 		return input;
 	}
 	
-	public JavaPairRDD<Tuple2<String, String>, Long> run(JavaSparkContext sc) {
+	public JavaPairRDD<String, Long> run(JavaSparkContext sc) {
 		
 		JavaRDD<LinkedList<String>> reviews = setup(sc);
 		
-		JavaPairRDD<String, String> prodUserPairRDD = reviews.mapToPair(
+		JavaPairRDD<String, Long> commonUsersRDD = reviews.mapToPair(
 				line -> {
 					String product = line.get(1);
 					String user = line.get(2);
 					
 					return new Tuple2<>( user, product );
-				}).distinct();
-		
-		JavaPairRDD<Tuple2<String, String>, Long> commonUsersRDD = prodUserPairRDD.cache()
-				.join(prodUserPairRDD)
-				.filter(tuple -> tuple._2._1.compareTo(tuple._2._2)<0) //take only pairs where products are different and the first precedes the latter
-				.mapToPair(tuple -> new Tuple2<>( tuple._2, 1L ))
-				.sortByKey(new TupleComparator())
-				//.aggregateByKey(0L, (a, b) -> a+1L, (p1, p2) -> p1+p2);
-				.reduceByKey((a,b) -> a+b)
-				;
+				})
+				.groupByKey()
+				.mapValues(products_list -> {
+					Set<String> set = new HashSet<>(); //no duplicates
+					products_list.forEach(prod -> set.add(prod.toString()));
+					List<String> list = new ArrayList<>();
+					list.addAll(set);
+					List<String> sorted = list
+							.stream()
+							.sorted()
+							.collect(Collectors.toCollection(LinkedList::new));
+					return sorted;
+					
+				})
+				.filter(tuple -> tuple._2.size()>1)
+				.flatMapToPair(tuple -> {
+						List<Tuple2<String, String>> productPairs = new ArrayList<>();
+						for(String prev : tuple._2) {
+							Iterator<String> it1 = tuple._2.listIterator(tuple._2.indexOf(prev)+1);
+							it1.forEachRemaining(curr -> {
+								String pair = prev +","+ curr;
+								productPairs.add(new Tuple2<>(pair, tuple._1));
+							});
+						}
+						return productPairs.iterator();
+				})
+				.sortByKey()
+				.aggregateByKey(0L, (acc, user) -> acc+1L, (p1, p2) -> p1+p2);
 				
 		return commonUsersRDD;
 
@@ -61,7 +81,7 @@ public class Job3 implements Serializable {
 		SparkConf sparkConf = new SparkConf().setAppName("Job3");
 		JavaSparkContext sc = new JavaSparkContext(sparkConf);
 		
-		Job3 job = new Job3(args[0]);
+		Job3NoJoin job = new Job3NoJoin(args[0]);
 		job.run(sc).coalesce(1).saveAsTextFile(args[1]);
 		
 		sc.close();
