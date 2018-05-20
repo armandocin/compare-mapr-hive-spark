@@ -40,7 +40,7 @@ public class Job1CountMapper extends Mapper<LongWritable, Text, Text, LongWritab
 			/*writing the pair (year, word) for each word in the summary*/
 			String[] tokenized_summary = summary.split("\\s+");
 			for(String word : tokenized_summary) {
-				word = word.replaceAll("[\\-\\+\\.\\^:,\"\'$%&(){}£=#@!?\t\n]","");
+				word = word.replaceAll("[\\-\\+\\.\\^:|\\*,\"\'$%&(){}£=#@!?\t\n]","");
 				if( !FILTERED.contains(word) ) {
 					String concat = Integer.toString(year) + "-" + word;
 					context.write(new Text(concat), one);

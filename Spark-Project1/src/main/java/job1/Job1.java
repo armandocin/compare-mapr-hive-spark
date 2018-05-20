@@ -19,7 +19,7 @@ public class Job1 implements Serializable{
 	private static final long serialVersionUID = 1L;
 	private static String pathToFile;
 	private static final Pattern PATTERN = Pattern.compile(",(?=([^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-	private static final String REPLACE = "[\\-\\+\\.\\^:,\"\'$%&(){}£=#@!?\t\n]";
+	private static final String REPLACE = "[\\-\\+\\.\\^:|\\*,\"\'$%&(){}£=#@!?\t\n]";
 	
 	public Job1(String fileInput){
 		Job1.pathToFile = fileInput;

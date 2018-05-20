@@ -10,6 +10,10 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 public class Job2 {
 
 	public static void main(String[] args) throws Exception{
+		if (args.length < 2) {
+			System.err.println("Usage: <path to jar> <filetxt_input> <filetxt_output>");
+			System.exit(1);
+		}
 		
 		Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, "job2");

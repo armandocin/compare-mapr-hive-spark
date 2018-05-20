@@ -2,9 +2,7 @@ package job1chain;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -17,12 +15,17 @@ public class Job1TopNCombiner extends Reducer<IntWritable, Text, IntWritable, Te
 		
 		List<String> list = new ArrayList<>();
 		values.forEach(e -> list.add(e.toString()));
-		List<String> topN = list.stream()
-				.sorted(Comparator.reverseOrder())
+		list.stream()
+				.sorted(new TopNComparator())
 				.limit(10)
-				.collect(Collectors.toList());
-		
-		context.write(key, new Text(topN.toString()));
+				.forEachOrdered(e -> {
+					try {
+						context.write(key, new Text(e));
+					} catch (IOException | InterruptedException e1) {
+						e1.printStackTrace();
+					}
+				});
+			
 	}
 
 }

@@ -3,7 +3,6 @@ package job1chain;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -29,8 +28,8 @@ public class Job1CountConf extends Configured implements Tool {
         job1.setMapOutputKeyClass(Text.class);
         job1.setMapOutputValueClass(LongWritable.class);
         
-        job1.setOutputKeyClass(IntWritable.class);
-        job1.setOutputValueClass(Text.class);
+        job1.setOutputKeyClass(Text.class);
+        job1.setOutputValueClass(LongWritable.class);
         FileInputFormat.addInputPath(job1, new Path(args[0]));
         FileOutputFormat.setOutputPath(job1, new Path(args[1] + "/temp"));
         

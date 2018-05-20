@@ -41,7 +41,7 @@ public class Job1Mapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 			/*writing the pair (year, word) for each word in the summary*/
 			String[] tokenized_summary = summary.split("\\s+");
 			for(String word : tokenized_summary) {
-				word = word.replaceAll("[\\-\\+\\.\\^:,\"\'$%&(){}£=#@!?\t\n]","");
+				word = word.replaceAll("[\\-\\+\\.\\^:|\\*,\"\'$%&(){}£=#@!?\t\n]","");
 				if( !FILTERED.contains(word) )
 					context.write(new IntWritable(year), new Text(word));
 			}

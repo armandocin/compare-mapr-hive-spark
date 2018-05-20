@@ -16,7 +16,7 @@ public class Job1TopNReducer extends Reducer<IntWritable, Text, IntWritable, Tex
 		List<String> list = new ArrayList<>();
 		values.forEach(e -> list.add(e.toString()));
 		List<String> topN = list.stream()
-				.sorted(Comparator.reverseOrder())
+				.sorted(new TopNComparator())
 				.limit(10)
 				.map(e -> {
 					String[] div = e.split("=");
