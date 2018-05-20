@@ -2,21 +2,18 @@ package job1;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-
 import scala.Tuple2;
 
 public class Job1 implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
+	private static final long one = 1L;
 	private static String pathToFile;
 	private static final Pattern PATTERN = Pattern.compile(",(?=([^\"]*\"[^\"]*\")*(?![^\"]*\"))");
 	private static final String REPLACE = "[\\-\\+\\.\\^:|\\*,\"\'$%&(){}£=#@!?\t\n]";
@@ -34,46 +31,47 @@ public class Job1 implements Serializable{
 		return input;
 	}
 	
-	public JavaPairRDD<Integer, Map<String, Long>> run(JavaSparkContext sc){
+public JavaPairRDD<Integer, List<String>> run(JavaSparkContext sc){
 		
 		JavaRDD<LinkedList<String>> reviews = setup(sc);
-		/**
-		 * Parsing lines returning an rdd pairs containing (year, list_of_words)
-		 */
-		/**
-		 * Counting, sorting, limit the words list
-		 * Map containing (word, count) is used
-		 */
-		JavaPairRDD<Integer, Map<String, Long>> wordCountPerYear = reviews
-				.mapToPair(line -> {
+		
+		JavaPairRDD<Integer, List<String>> wordCountPerYear = reviews
+				.flatMapToPair(line -> {
 					String timestamp = line.get(7);
 					String summary = line.get(8);
 					List<String> tokenized_summary = new ArrayList<>(Arrays.asList(summary.split("\\s+")));
-					return new Tuple2<>(getYear(timestamp), tokenized_summary);
+					String year = Integer.toString(getYear(timestamp));
+					
+					List<Tuple2<String, Long>> tupleList = new ArrayList<>();
+					for(String word : tokenized_summary) {
+						word = word.replaceAll(REPLACE, "").toLowerCase().trim();
+						if(word.length()>0 && year.compareTo("-1")!=0)
+							tupleList.add(new Tuple2<>(year+"-"+word, one));
+					}
+					return tupleList.iterator();
 				})
-				.reduceByKey((l1, l2)-> {l1.addAll(l2); return l1;})
-				.filter(tuple -> tuple._1 != -1)
-				.mapValues(words ->{
-					Map<String, Long> wordcount = wordcount(words).entrySet().stream()
-							.sorted(Entry.comparingByValue(Comparator.reverseOrder()))
+				.reduceByKey((a, b)-> a + b)
+				.mapToPair(tuple ->{
+					String[] keySeparate = tuple._1.split("-");
+					int year = Integer.parseInt(keySeparate[0]);
+					String word = keySeparate[1];
+					
+					return new Tuple2<>(year, word+"="+Long.toString(tuple._2));			
+					
+				})
+				.groupByKey()
+				.mapValues(iterable -> {
+					List<String> list = new ArrayList<>();
+					((Iterable<String>) iterable).forEach(e -> list.add(e.toString()));
+					List<String> topN = list.stream()
+							.sorted(new TopNComparator())
 							.limit(10)
-							.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new)
-							);
-					return wordcount;
+							.collect(Collectors.toList());
+					return topN;
 				})
 				.sortByKey(true);
 		
 		return wordCountPerYear;
-	}
-	
-	public Map<String, Long> wordcount(List<String> words){
-		Map<String, Long> counts = words.stream()
-			    .map(word -> word.replaceAll(REPLACE, "").toLowerCase().trim())
-			    .filter(word -> word.length() > 0)
-			    .map(word -> new SimpleEntry<>(word, 1))
-		        .collect(Collectors.groupingBy( SimpleEntry::getKey, Collectors.counting() ));
-		
-		return counts;
 	}
 	
 	public int getYear(String timestamp) {
@@ -95,9 +93,8 @@ public class Job1 implements Serializable{
 			System.exit(1);
 		}
 		SparkConf sparkConf = new SparkConf().setAppName("Job1")
-				.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-				.set("spark.kryoserializer.buffer.mb","48")
-				;
+				.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+
 		JavaSparkContext sc = new JavaSparkContext(sparkConf);
 		
 		Job1 job = new Job1(args[0]);

@@ -1,9 +1,9 @@
-package job1chain;
+package job1;
 
 import java.util.Comparator;
 
 public class TopNComparator implements Comparator<String> {
-	
+
 	@Override
 	public int compare(String arg0, String arg1) {
 		String[] div0 = arg0.split("=");

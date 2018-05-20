@@ -18,10 +18,6 @@ public class Job1TopNReducer extends Reducer<IntWritable, Text, IntWritable, Tex
 		List<String> topN = list.stream()
 				.sorted(new TopNComparator())
 				.limit(10)
-				.map(e -> {
-					String[] div = e.split("=");
-					return div[1] + "=" + div[0];
-				})
 				.collect(Collectors.toList());
 		
 		context.write(key, new Text(topN.toString()));

@@ -15,7 +15,7 @@ public class Job1TopNMapper extends Mapper<Text, Text, IntWritable, Text> {
 		IntWritable year = new IntWritable(Integer.parseInt(keySeparate[0]));
 		String word = keySeparate[1];
 		
-		String wordCnt = value.toString()+ "=" + word;
+		String wordCnt = word+ "=" + value.toString();
 		
 		context.write(year, new Text(wordCnt));
 		
