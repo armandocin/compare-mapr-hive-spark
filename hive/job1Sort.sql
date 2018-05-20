@@ -3,6 +3,9 @@ drop table if exists reviews;
 drop table if exists result;
 drop table if exists output;
 
+add jar /home/armandocin/Documenti/bigdata_git/hive/lib/hiveUDF-0.0.1-SNAPSHOT.jar;
+CREATE TEMPORARY FUNCTION limit_list AS 'utils.LimitCollectionLengthUDF';
+
 --row format delimited fields terminated by ${pattern};
 CREATE TABLE input (line STRING); 
 
@@ -24,26 +27,27 @@ SELECT split(line, ${pattern})[0] as Id,
 FROM input;
 
 CREATE TABLE result AS
-SELECT t1.ProductId as Product1, t2.ProductId as Product2, COUNT(1) as CommonUsersNum
-FROM(
-	SELECT DISTINCT ProductId, UserId
-	FROM reviews
-	) t1
-	JOIN
+SELECT t2.Year, limit_list(collect_set(concat(t2.Word, "=", cast(t2.Count as string)))) as WordCounts
+FROM
 	(
-	SELECT DISTINCT ProductId, UserId
-	FROM reviews
+	SELECT t1.Year, t1.Word, COUNT(1) as Count
+	FROM(
+		SELECT year(from_unixtime(Time)) as Year, lower(regexp_replace(Word, '[\\-\\+\\.\\^:,\"\'$%&(){}£=#@!?\t\n]', '')) as Word
+		FROM reviews
+		LATERAL VIEW explode( split(Summary, "\\s+") ) exp AS Word
+		) t1
+	WHERE t1.Year is not NULL
+	GROUP BY t1.Year, t1.Word
+	DISTRIBUTE BY t1.Year, t1.Word
+	SORT BY t1.Year ASC, Count DESC
 	) t2
-	ON t1.UserId = t2.UserId
-WHERE t1.ProductId < t2.ProductId --do not select duplicate pairs
-GROUP BY t1.ProductId, t2.ProductId
-HAVING t1.ProductId != t2.ProductId
-ORDER BY t1.ProductId, t2.ProductId;
+WHERE t2.Word != ""
+GROUP BY t2.Year;
 
-create external table output (p1 string, p2 string, cnt BIGINT)
+create external table output (Year int, WordCounts array<string>)
 row format delimited
 fields terminated by '\t'
-collection items terminated by ', '
+collection items terminated by ',\s'
 lines terminated by '\n'
-stored as textfile location '/user/hive/warehouse/output3';
+stored as textfile location '/user/hive/warehouse/output1';
 insert into table output select * from result;

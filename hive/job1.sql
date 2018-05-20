@@ -9,7 +9,7 @@ CREATE TEMPORARY FUNCTION limit_list AS 'utils.LimitCollectionLengthUDF';
 --row format delimited fields terminated by ${pattern};
 CREATE TABLE input (line STRING); 
 
-LOAD DATA INPATH '/user/hive/input_proj1/Reviews_multi' OVERWRITE INTO TABLE input;
+LOAD DATA LOCAL INPATH '/home/armandocin/hadoop-docker-volume/data/input_proj1/Reviews_4.csv' OVERWRITE INTO TABLE input;
 
 set hivevar:pattern = ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*(?![^\\\"]*\\\"))";
 
@@ -48,5 +48,5 @@ row format delimited
 fields terminated by '\t'
 collection items terminated by ',\s'
 lines terminated by '\n'
-stored as textfile location '/user/hive/warehouse/output';
+stored as textfile location '/user/hive/warehouse/output1';
 insert into table output select * from result;

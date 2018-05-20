@@ -1,4 +1,4 @@
-package job2;
+package job1chain;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,37 +13,47 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class Job2Mapper extends Mapper<LongWritable, Text, Text, Text> {
-	
+public class Job1CountMapper extends Mapper<LongWritable, Text, Text, LongWritable> {
+
+	private static final Log LOG = LogFactory.getLog(Job1CountMapper.class);
+	private static List<String> FILTERED = new ArrayList<>(Arrays
+			.asList("")//, "is", "are", "this", "these", "that", "but", "the", "and", "a", "to", "in", "an", "for", "by", "of", "from", "with", "on", "i", "not", "it", "my")
+			);
 	private static final Pattern PATTERN = Pattern.compile(",(?=([^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-	private static final Log LOG = LogFactory.getLog(Job2Mapper.class);
-	private static List<Integer> FILTERED = new ArrayList<>(Arrays
-			.asList(1999, 2000, 2001, 2002));
+	private static final LongWritable one = new LongWritable(1);
 	
-	@Override
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-		
+
 		try {
 			/*parsing csv records. Form: Id, ProductID, UserID, Profile Name, HelpNum, HelpDen, Score, Time, Summary, Text.*/
 			String csv_record = value.toString();
 			String[] csv_fields = PATTERN.split(csv_record);
-			String product = csv_fields[1];
-			String score = csv_fields[6];
+			Long timestamp = Long.parseLong(csv_fields[7]);
+			String summary = csv_fields[8];
+			summary = summary.toLowerCase();
 			
 			/*parsing Unix time date*/
-			Long timestamp = Long.parseLong(csv_fields[7]);
 			Calendar cal = Calendar.getInstance();
 			cal.setTimeInMillis(timestamp*1000L);
 			int year = cal.get(Calendar.YEAR);
 			
-			String output_value = Integer.toString(year) + "-" + score;
-			if(!FILTERED.contains(year))
-				context.write(new Text(product), new Text(output_value));
+			/*writing the pair (year, word) for each word in the summary*/
+			String[] tokenized_summary = summary.split("\\s+");
+			for(String word : tokenized_summary) {
+				word = word.replaceAll("[\\-\\+\\.\\^:,\"\'$%&(){}£=#@!?\t\n]","");
+				if( !FILTERED.contains(word) ) {
+					String concat = Integer.toString(year) + "-" + word;
+					context.write(new Text(concat), one);
+				}
+			}
 		}
 		catch (NumberFormatException e) {
 			//System.out.println(value.toString());
 			LOG.info("\n" + value.toString() + "\n");
 		}
+		
 	}
-
+	
+	
+	
 }

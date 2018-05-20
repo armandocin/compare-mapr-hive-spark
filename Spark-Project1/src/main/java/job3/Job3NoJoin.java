@@ -2,6 +2,7 @@ package job3;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 //import job3.TupleComparator;
@@ -15,18 +16,18 @@ public class Job3NoJoin implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private static String pathToFile;
-	private static final String PATTERN = ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*(?![^\\\"]*\\\"))";
+	private static final Pattern PATTERN = Pattern.compile(",(?=([^\"]*\"[^\"]*\")*(?![^\"]*\"))");
 	
 	public Job3NoJoin(String fileInput){
 		Job3NoJoin.pathToFile = fileInput;
 	}
 	
 	public JavaRDD<LinkedList<String>> setup(JavaSparkContext sc) {
-		JavaRDD<String> dataWithHeader = sc.textFile(pathToFile, 4);
+		JavaRDD<String> dataWithHeader = sc.textFile(pathToFile,4);
 		String header = dataWithHeader.first();
 		JavaRDD<LinkedList<String>> input = dataWithHeader
 				.filter(l -> !l.equals(header))
-				.map(review -> new LinkedList<>(Arrays.asList(review.split(PATTERN))));
+				.map(review -> new LinkedList<>(Arrays.asList(PATTERN.split(review))));
 		return input;
 	}
 	
@@ -66,8 +67,8 @@ public class Job3NoJoin implements Serializable {
 						}
 						return productPairs.iterator();
 				})
-				.sortByKey()
-				.aggregateByKey(0L, (acc, user) -> acc+1L, (p1, p2) -> p1+p2);
+				.aggregateByKey(0L, (acc, user) -> acc+1L, (p1, p2) -> p1+p2)
+				.sortByKey();
 				
 		return commonUsersRDD;
 
@@ -78,7 +79,7 @@ public class Job3NoJoin implements Serializable {
 			System.err.println("Usage: Job1 <filetxt_input> <filetxt_output>");
 			System.exit(1);
 		}
-		SparkConf sparkConf = new SparkConf().setAppName("Job3");
+		SparkConf sparkConf = new SparkConf().setAppName("Job3NoJoin");
 		JavaSparkContext sc = new JavaSparkContext(sparkConf);
 		
 		Job3NoJoin job = new Job3NoJoin(args[0]);

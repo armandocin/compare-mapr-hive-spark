@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class Job1Mapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 
@@ -20,13 +21,14 @@ public class Job1Mapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 	private static List<String> FILTERED = new ArrayList<>(Arrays
 			.asList("")//, "is", "are", "this", "these", "that", "but", "the", "and", "a", "to", "in", "an", "for", "by", "of", "from", "with", "on", "i", "not", "it", "my")
 			);
+	private static final Pattern PATTERN = Pattern.compile(",(?=([^\"]*\"[^\"]*\")*(?![^\"]*\"))");
 	
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
 		try {
 			/*parsing csv records. Form: Id, ProductID, UserID, Profile Name, HelpNum, HelpDen, Score, Time, Summary, Text.*/
 			String csv_record = value.toString();
-			String[] csv_fields = csv_record.split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*(?![^\\\"]*\\\"))");
+			String[] csv_fields = PATTERN.split(csv_record);
 			Long timestamp = Long.parseLong(csv_fields[7]);
 			String summary = csv_fields[8];
 			summary = summary.toLowerCase();

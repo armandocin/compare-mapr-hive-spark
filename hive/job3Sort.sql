@@ -24,21 +24,25 @@ SELECT split(line, ${pattern})[0] as Id,
 FROM input;
 
 CREATE TABLE result AS
-SELECT t1.ProductId as Product1, t2.ProductId as Product2, COUNT(1) as CommonUsersNum
-FROM(
-	SELECT DISTINCT ProductId, UserId
-	FROM reviews
+SELECT *
+FROM (
+	SELECT t1.ProductId as Product1, t2.ProductId as Product2, COUNT(1) as CommonUsersNum
+	FROM(
+		SELECT DISTINCT ProductId, UserId
+		FROM reviews
+		) t1
+		JOIN
+		(
+		SELECT DISTINCT ProductId, UserId
+		FROM reviews
+		) t2
+		ON t1.UserId = t2.UserId
+	WHERE t1.ProductId < t2.ProductId --do not select duplicate pairs
+	GROUP BY t1.ProductId, t2.ProductId
 	) t1
-	JOIN
-	(
-	SELECT DISTINCT ProductId, UserId
-	FROM reviews
-	) t2
-	ON t1.UserId = t2.UserId
-WHERE t1.ProductId < t2.ProductId --do not select duplicate pairs
-GROUP BY t1.ProductId, t2.ProductId
-HAVING t1.ProductId != t2.ProductId
-ORDER BY t1.ProductId, t2.ProductId;
+
+DISTRIBUTE BY Product1, Product2
+SORT BY Product1, Product2;
 
 create external table output (p1 string, p2 string, cnt BIGINT)
 row format delimited

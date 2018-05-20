@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.spark.SparkConf;
@@ -17,7 +18,7 @@ public class Job1 implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
 	private static String pathToFile;
-	private static final String PATTERN = ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*(?![^\\\"]*\\\"))";
+	private static final Pattern PATTERN = Pattern.compile(",(?=([^\"]*\"[^\"]*\")*(?![^\"]*\"))");
 	private static final String REPLACE = "[\\-\\+\\.\\^:,\"\'$%&(){}£=#@!?\t\n]";
 	
 	public Job1(String fileInput){
@@ -25,11 +26,11 @@ public class Job1 implements Serializable{
 	}
 	
 	public JavaRDD<LinkedList<String>> setup(JavaSparkContext sc) {
-		JavaRDD<String> dataWithHeader = sc.textFile(pathToFile);
+		JavaRDD<String> dataWithHeader = sc.textFile(pathToFile, 4);
 		String header = dataWithHeader.first();
 		JavaRDD<LinkedList<String>> input = dataWithHeader
 				.filter(l -> !l.equals(header))
-				.map(review -> new LinkedList<>(Arrays.asList(review.split(PATTERN))));
+				.map(review -> new LinkedList<>(Arrays.asList(PATTERN.split(review))));
 		return input;
 	}
 	
@@ -39,7 +40,11 @@ public class Job1 implements Serializable{
 		/**
 		 * Parsing lines returning an rdd pairs containing (year, list_of_words)
 		 */
-		JavaPairRDD<Integer, List<String>> wordsPerYear = reviews
+		/**
+		 * Counting, sorting, limit the words list
+		 * Map containing (word, count) is used
+		 */
+		JavaPairRDD<Integer, Map<String, Long>> wordCountPerYear = reviews
 				.mapToPair(line -> {
 					String timestamp = line.get(7);
 					String summary = line.get(8);
@@ -48,19 +53,15 @@ public class Job1 implements Serializable{
 				})
 				.reduceByKey((l1, l2)-> {l1.addAll(l2); return l1;})
 				.filter(tuple -> tuple._1 != -1)
+				.mapValues(words ->{
+					Map<String, Long> wordcount = wordcount(words).entrySet().stream()
+							.sorted(Entry.comparingByValue(Comparator.reverseOrder()))
+							.limit(10)
+							.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new)
+							);
+					return wordcount;
+				})
 				.sortByKey(true);
-		
-		/**
-		 * Counting, sorting, limit the words list
-		 * Map containing (word, count) is used
-		 */
-		JavaPairRDD<Integer, Map<String, Long>> wordCountPerYear = wordsPerYear.mapValues(words ->{
-			Map<String, Long> wordcount = wordcount(words).entrySet().stream()
-					.sorted(Entry.comparingByValue(Comparator.reverseOrder()))
-					.limit(10)
-					.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
-			return wordcount;
-		});
 		
 		return wordCountPerYear;
 	}

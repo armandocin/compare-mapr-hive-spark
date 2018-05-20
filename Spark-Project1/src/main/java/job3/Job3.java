@@ -2,6 +2,8 @@ package job3;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.regex.Pattern;
+
 import job3.TupleComparator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -13,7 +15,7 @@ public class Job3 implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	private static String pathToFile;
-	private static final String PATTERN = ",(?=([^\\\"]*\\\"[^\\\"]*\\\")*(?![^\\\"]*\\\"))";
+	private static final Pattern PATTERN = Pattern.compile(",(?=([^\"]*\"[^\"]*\")*(?![^\"]*\"))");
 	
 	public Job3(String fileInput){
 		Job3.pathToFile = fileInput;
@@ -24,7 +26,7 @@ public class Job3 implements Serializable {
 		String header = dataWithHeader.first();
 		JavaRDD<LinkedList<String>> input = dataWithHeader
 				.filter(l -> !l.equals(header))
-				.map(review -> new LinkedList<>(Arrays.asList(review.split(PATTERN))));
+				.map(review -> new LinkedList<>(Arrays.asList(PATTERN.split(review))));
 		return input;
 	}
 	
@@ -44,9 +46,9 @@ public class Job3 implements Serializable {
 				.join(prodUserPairRDD)
 				.filter(tuple -> tuple._2._1.compareTo(tuple._2._2)<0) //take only pairs where products are different and the first precedes the latter
 				.mapToPair(tuple -> new Tuple2<>( tuple._2, 1L ))
-				.sortByKey(new TupleComparator())
 				//.aggregateByKey(0L, (a, b) -> a+1L, (p1, p2) -> p1+p2);
 				.reduceByKey((a,b) -> a+b)
+				.sortByKey(new TupleComparator())
 				;
 				
 		return commonUsersRDD;

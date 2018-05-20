@@ -24,26 +24,24 @@ SELECT split(line, ${pattern})[0] as Id,
 FROM input;
 
 CREATE TABLE result AS
-SELECT t1.ProductId as Product1, t2.ProductId as Product2, COUNT(1) as CommonUsersNum
+SELECT ProductId, collect_set(concat(reducer.Year, "=", cast(reducer.AvgScore as string))) as AvgPerYear
 FROM(
-	SELECT DISTINCT ProductId, UserId
-	FROM reviews
-	) t1
-	JOIN
-	(
-	SELECT DISTINCT ProductId, UserId
-	FROM reviews
-	) t2
-	ON t1.UserId = t2.UserId
-WHERE t1.ProductId < t2.ProductId --do not select duplicate pairs
-GROUP BY t1.ProductId, t2.ProductId
-HAVING t1.ProductId != t2.ProductId
-ORDER BY t1.ProductId, t2.ProductId;
+	SELECT ProductId, Year, round(AVG(Score), 2) as AvgScore
+	FROM(	
+		SELECT ProductId, year(from_unixtime(Time)) as Year, Score
+		FROM reviews
+		) mapper
+	WHERE Year > 2002
+	GROUP BY ProductId, Year
+	DISTRIBUTE BY ProductId, Year
+	SORT BY ProductId, Year
+	) reducer
+GROUP BY ProductId;
 
-create external table output (p1 string, p2 string, cnt BIGINT)
+create external table output (prod string, avgpy array<string>)
 row format delimited
 fields terminated by '\t'
 collection items terminated by ', '
 lines terminated by '\n'
-stored as textfile location '/user/hive/warehouse/output3';
+stored as textfile location '/user/hive/warehouse/output2';
 insert into table output select * from result;

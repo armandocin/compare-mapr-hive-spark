@@ -42,5 +42,5 @@ row format delimited
 fields terminated by '\t'
 collection items terminated by ', '
 lines terminated by '\n'
-stored as textfile location '/user/hive/warehouse/output';
+stored as textfile location '/user/hive/warehouse/output2';
 insert into table output select * from result;
