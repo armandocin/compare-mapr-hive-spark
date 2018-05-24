@@ -103,7 +103,8 @@ public class Job2 implements Serializable{
 			System.err.println("Usage: Job1 <filetxt_input> <filetxt_output>");
 			System.exit(1);
 		}
-		SparkConf sparkConf = new SparkConf().setAppName("Job2");
+		SparkConf sparkConf = new SparkConf().setAppName("Job2")
+				.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
 		JavaSparkContext sc = new JavaSparkContext(sparkConf);
 		
 		Job2 job = new Job2(args[0]);

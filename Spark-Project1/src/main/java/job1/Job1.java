@@ -62,7 +62,10 @@ public JavaPairRDD<Integer, List<String>> run(JavaSparkContext sc){
 				.groupByKey()
 				.mapValues(iterable -> {
 					List<String> list = new ArrayList<>();
-					((Iterable<String>) iterable).forEach(e -> list.add(e.toString()));
+					Iterator<String> it = iterable.iterator();
+					while(it.hasNext()) {
+						list.add(it.next().toString());
+					}
 					List<String> topN = list.stream()
 							.sorted(new TopNComparator())
 							.limit(10)
