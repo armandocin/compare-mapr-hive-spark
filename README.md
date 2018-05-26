@@ -7,6 +7,8 @@ a.y. 2017-2018
 - [Specifications](#specifications)
 	+ [Goal](#goal)
 	+ [Report](#report)
+- [Datasets](#datasets)
+- [Frameworks And Enviroments](#framework-and-enviroments)
 
 ## Specifications
 
@@ -54,3 +56,27 @@ A final report must be written for each job. The report should contain:
 - A possible MapReduce, Hive, Spark **implementation** (pseudocode).
 - The beginning lines of each job result.
 - Tables and plots comparing local and cluster execution time of each job.
+
+## Datasets
+
+Starting from the original csv file described earlier, four inputs with different sizes has been created:  
+
+- **Reviews_300k.csv**: a small file obtained splittig in half the original file, containg about 300 thousand reviews.
+- **Reviews.csv**: the original file containing about 600 thousand reviews.
+- **Reviews_4.csv**: obtained chaining 4 times the original dataset.
+- **Reviews_20**: obtained chaining 20 times the original dataset.
+
+Follows a summary table with the dimension of each file.
+
+INPUT FILE | NUMBER OF RECORD | SIZE (MB) |
+------------|------------------|-----------|
+Reviews_300k.csv | 284.228 | 145 |
+Reviews_4.csv | 568.455 | 287 |
+Reviews_4.csv | 2.273.820 | 1148 |
+Reviews_20.csv | 11.369.100 | 5740 |
+
+## Frameworks And Enviroments
+
+All frameworks used lie on **Hadoop 3.0.1**. The version used for **Hive** is 2.3.3 and the version used for **Spark** is 2.3.0.
+To develop MapReduce and Spark jobs, **Java 8** with **Eclipse IDE** are used. Both commands used to execute jobs in MapReduce and Spark, take, besides the `.jar` file and the job's class, two parameters: the **input** `.csv` file and the **output** destination. In MapReduce the output destination is a **HDFS directory** that will be created (must not exists); the input file must be on HDFS as well. In Spark, if the execution is local, the input and output can be on local file system. If the execution is on cluster the file should be on HDFS.  
+Finally, Hive jobs are written in `.hql` scripts. these don't take any argument because the input file and output destination are embendend in the scripts, while for cluster execution, the **Amabari Hive View 2.0** helps the user to choose each parameters.
