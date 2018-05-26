@@ -68,7 +68,7 @@ Starting from the original csv file described earlier, four inputs with differen
 
 Follows a summary table with the dimension of each file.
 
-INPUT FILE | NUMBER OF RECORD | SIZE (MB) |
+INPUT FILE | NUMBER OF RECORDS | SIZE (MB) |
 ------------|------------------|-----------|
 Reviews_300k.csv | 284.228 | 145 |
 Reviews_4.csv | 568.455 | 287 |
